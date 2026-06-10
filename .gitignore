@@ -1,0 +1,7 @@
+__pycache__/
+*.npy
+*.onnx
+*.engine
+inference/build/
+.venv/
+wandb/

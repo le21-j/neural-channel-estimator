@@ -1,0 +1,3 @@
+profile: TDL-C
+doppler_sweep_hz: null   # set in P1-PROMPT-1
+snr_db_range: null       # set in P1-PROMPT-1

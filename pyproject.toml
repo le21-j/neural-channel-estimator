@@ -1,0 +1,10 @@
+[project]
+name = "neural-channel-estimator"
+version = "0.0.1"
+requires-python = ">=3.11"
+dependencies = [
+  "sionna>=2.0,<3.0",
+  "torch>=2.2,<3.0",
+  "onnx",
+  "wandb",
+]
