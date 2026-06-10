@@ -66,6 +66,9 @@ class Baselines:
             sys_cfg, ch_cfg = self.sys_cfg, self.ch_cfg
             fc = ch_cfg["carrier_frequency_ghz"] * 1e9
             speed = f_d * 3e8 / fc
+            # 37.5 us = normal-CP symbol duration; distinct from system.yaml
+            # symbol_us=35.7 (mean over slot incl. extended-CP symbol 0).
+            # Correct quantity for tdl_time_cov_mat — do NOT "fix" to 35.7.
             sym_dur = (sys_cfg["fft_size"] + sys_cfg["cp"]) / (
                 sys_cfg["fft_size"] * sys_cfg["scs_khz"] * 1e3)
             cov_time = tdl_time_cov_mat(ch_cfg["profile"].split("-")[1], speed,
