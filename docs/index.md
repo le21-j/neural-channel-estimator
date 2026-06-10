@@ -28,9 +28,10 @@ flowchart TD
 3. [Baseline estimators: LS & LMMSE](03_baseline_estimators.md)
 4. [Residual CNN](04_residual_cnn.md)
 5. [Harness, EXIT checks & GPU gates](05_harness_and_gpu_gates.md)
+6. [ONNX export & parity](06_onnx_export_and_parity.md)
 
-Chapters 1–4 cover code that exists today (Prompts 1–2 PASSED). ONNX export,
-TensorRT inference, and profiling chapters get added as Prompts 3–5 land.
+Chapters 1–6 cover code that exists today (Prompts 1–3 PASSED). TensorRT
+inference and profiling chapters get added as Prompts 4–5 land.
 
 ---
 *Maintained in the style of [PocketFlow-Tutorial-Codebase-Knowledge](https://github.com/The-Pocket/PocketFlow-Tutorial-Codebase-Knowledge); updated at each prompt EXIT.*
