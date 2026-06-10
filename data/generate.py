@@ -50,6 +50,35 @@ def build_tx_grid(n, sys_cfg, gen):
     return x, mask
 
 
+def gen_batch(n, f_d, snr, sys_cfg, ch_cfg, gen):
+    """n realizations at Doppler f_d. snr: (lo, hi) uniform draw or fixed float, dB.
+
+    Returns (y_masked, h) complex64 (n, S, F) and snr_db (n,).
+    """
+    S, F = sys_cfg["symbols_per_slot"], sys_cfg["fft_size"]
+    fc = ch_cfg["carrier_frequency_ghz"] * 1e9
+    v = f_d * C / fc  # m/s
+    rg = ResourceGrid(num_ofdm_symbols=S, fft_size=F,
+                      subcarrier_spacing=sys_cfg["scs_khz"] * 1e3,
+                      cyclic_prefix_length=sys_cfg["cp"])
+    tdl = TDL(model=ch_cfg["profile"].split("-")[1],
+              delay_spread=ch_cfg["delay_spread_ns"] * 1e-9,
+              carrier_frequency=fc, min_speed=v, max_speed=v)
+    h = GenerateOFDMChannel(tdl, rg)(batch_size=n).reshape(n, S, F)  # complex64
+    x, mask = build_tx_grid(n, sys_cfg, gen)
+    if isinstance(snr, (tuple, list)):
+        snr_db = torch.rand(n, generator=gen) * (snr[1] - snr[0]) + snr[0]
+    else:
+        snr_db = torch.full((n,), float(snr))
+    no = 10.0 ** (-snr_db / 10.0)
+    noise = torch.sqrt(no / 2).reshape(n, 1, 1) * (
+        torch.randn(n, S, F, generator=gen)
+        + 1j * torch.randn(n, S, F, generator=gen))
+    y = h * x + noise.to(torch.complex64)
+    y_masked = torch.where(mask, y, torch.zeros((), dtype=y.dtype))
+    return y_masked, h, snr_db
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, required=True)
@@ -61,11 +90,7 @@ def main():
     S, F = sys_cfg["symbols_per_slot"], sys_cfg["fft_size"]
     fc = ch_cfg["carrier_frequency_ghz"] * 1e9
     sweep = ch_cfg["doppler_sweep_hz"]
-    snr_lo, snr_hi = ch_cfg["snr_db_range"]
-
-    rg = ResourceGrid(num_ofdm_symbols=S, fft_size=F,
-                      subcarrier_spacing=sys_cfg["scs_khz"] * 1e3,
-                      cyclic_prefix_length=sys_cfg["cp"])
+    snr_range = tuple(ch_cfg["snr_db_range"])
 
     torch.manual_seed(args.seed)
     gen = torch.Generator().manual_seed(args.seed)
@@ -77,27 +102,16 @@ def main():
 
     rx_list, h_list, dop_list, snr_list = [], [], [], []
     for f_d, cnt in zip(sweep, counts):
-        v = f_d * C / fc  # m/s
-        tdl = TDL(model=ch_cfg["profile"].split("-")[1],
-                  delay_spread=ch_cfg["delay_spread_ns"] * 1e-9,
-                  carrier_frequency=fc, min_speed=v, max_speed=v)
-        gen_h = GenerateOFDMChannel(tdl, rg)
         done = 0
         while done < cnt:
             b = min(CHUNK, cnt - done)
-            h = gen_h(batch_size=b).reshape(b, S, F)          # complex64
-            x, mask = build_tx_grid(b, sys_cfg, gen)
-            snr_db = torch.rand(b, generator=gen) * (snr_hi - snr_lo) + snr_lo
-            no = 10.0 ** (-snr_db / 10.0)
-            noise = torch.sqrt(no / 2).reshape(b, 1, 1) * (
-                torch.randn(b, S, F, generator=gen)
-                + 1j * torch.randn(b, S, F, generator=gen))
-            y = h * x + noise.to(torch.complex64)
-            rx_list.append(torch.where(mask, y, torch.zeros((), dtype=y.dtype)))
+            y_masked, h, snr_db = gen_batch(b, f_d, snr_range, sys_cfg, ch_cfg, gen)
+            rx_list.append(y_masked)
             h_list.append(h)
             dop_list.append(torch.full((b,), float(f_d)))
             snr_list.append(snr_db)
             done += b
+        v = f_d * C / fc
         print(f"doppler {f_d:>5.0f} Hz (v={v*3.6:6.1f} km/h): {cnt} realizations")
 
     def to_2ch(t):  # complex (N,S,F) -> float32 (N,2,S,F)
