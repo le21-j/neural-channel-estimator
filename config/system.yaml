@@ -4,5 +4,7 @@ symbols_per_slot: 14
 slot_ms: 0.5
 symbol_us: 35.7          # mean symbol period incl. CP = slot/14; T_u = 1/30kHz = 33.33 us
 pilot_pattern: comb
-fft_size: null           # set in P1-PROMPT-1
-cp: null                 # set in P1-PROMPT-1
+fft_size: 64             # P1-PROMPT-1: 64 subcarriers, no guards/DC null
+cp: 8                    # P1-PROMPT-1: samples @ fs=1.92MHz -> 4.17us > TDL-C max excess delay ~2.6us
+pilot_symbol_indices: [2, 11]   # DMRS-like, 2 pilot symbols per slot
+pilot_comb_spacing: 4    # comb-4 in frequency -> 16 pilot SC per pilot symbol
