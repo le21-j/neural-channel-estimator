@@ -1,8 +1,11 @@
+.DS_Store
 __pycache__/
-*.npy
-*.pt
-*.onnx
-*.engine
-inference/build/
+*.pyc
+*.pyo
 .venv/
-wandb/
+*.egg-info/
+dist/
+build/
+*.so
+*.o
+*.d
