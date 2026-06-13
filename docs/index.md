@@ -30,9 +30,12 @@ flowchart TD
 5. [Harness, EXIT checks & GPU gates](05_harness_and_gpu_gates.md)
 6. [ONNX export & parity](06_onnx_export_and_parity.md)
 7. [TensorRT C++ engine & profiling](07_tensorrt_engine.md)
+8. [NVIDIA Aerial pyAerial mapping & slot-budget framing](08_aerial_mapping.md)
 
 Chapters 1–7 cover all written code (Prompts 1–3 PASSED; 4–5 written and
 parked as GPU_STEP — numbers await the remote GPU session).
+Chapter 8 maps the estimator to pyAerial's pluggable channel-est slot and
+frames the 5G-NR slot-time budget (latency numbers PARKED pending GPU run).
 
 ---
 *Maintained in the style of [PocketFlow-Tutorial-Codebase-Knowledge](https://github.com/The-Pocket/PocketFlow-Tutorial-Codebase-Knowledge); updated at each prompt EXIT.*

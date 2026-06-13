@@ -6,7 +6,17 @@ GenerateOFDMChannel (PyTorch backend). The received grid is formed in the
 frequency domain as y = H * x + n, which is exactly what ApplyOFDMChannel
 computes — done explicitly here so pilot placement stays config-driven.
 
-Usage: python data/generate.py --n 1000 [--seed 0] [--out data/dataset]
+Usage:
+  python data/generate.py --n 1000 [--seed 0] [--out data/dataset]
+  python data/generate.py --n 1000 --dmrs [--out data/dataset_dmrs]
+
+--dmrs flag: switch from the default comb-4 pilots to a 5G-NR Type-1 DMRS
+  (3GPP TS 38.211 §6.4.1.1) comb-2 pattern — every 2nd subcarrier on the same
+  pilot symbols [2, 11] (mapping table §6.4.1.1.3-1, port p=0, cdm group 0).
+  Doubles pilot density (32 -> 64 pilot REs/slot, 7.1% overhead) at the cost
+  of data RE capacity, matching the NR physical downlink shared channel (PDSCH)
+  DMRS configuration type 1.  Output array shapes are unchanged; only the RE
+  mask differs.  Default: OFF (existing comb-4 behaviour preserved).
 """
 import argparse
 from pathlib import Path
@@ -37,12 +47,22 @@ def qpsk(shape, gen):
     return (sym / np.sqrt(2)).to(torch.complex64)
 
 
-def build_tx_grid(n, sys_cfg, gen):
-    """Unit-power QPSK grid: fixed pilots at comb REs, random data elsewhere."""
+def build_tx_grid(n, sys_cfg, gen, dmrs=False):
+    """Unit-power QPSK grid: fixed pilots at comb REs, random data elsewhere.
+
+    dmrs=False (default): comb-4 from system.yaml (pilot_comb_spacing=4).
+    dmrs=True : 5G-NR Type-1 DMRS comb-2, port p=0, CDM group 0
+                (3GPP TS 38.211 §6.4.1.1.3-1: subcarriers 0,2,4,...,F-2
+                 on pilot_symbol_indices; same fixed-QPSK seeding convention).
+    """
     S, F = sys_cfg["symbols_per_slot"], sys_cfg["fft_size"]
     x = qpsk((n, S, F), gen)
     pilot_gen = torch.Generator().manual_seed(PILOT_SEED)
-    sc = torch.arange(0, F, sys_cfg["pilot_comb_spacing"])
+    if dmrs:
+        # NR DMRS Type-1, port 0, CDM group 0: even subcarriers (comb-2)
+        sc = torch.arange(0, F, 2)
+    else:
+        sc = torch.arange(0, F, sys_cfg["pilot_comb_spacing"])
     for sym in sys_cfg["pilot_symbol_indices"]:
         x[:, sym, sc] = qpsk((len(sc),), pilot_gen)  # same pilots every sample
     mask = torch.zeros(S, F, dtype=torch.bool)
@@ -50,7 +70,7 @@ def build_tx_grid(n, sys_cfg, gen):
     return x, mask
 
 
-def gen_batch(n, f_d, snr, sys_cfg, ch_cfg, gen):
+def gen_batch(n, f_d, snr, sys_cfg, ch_cfg, gen, dmrs=False):
     """n realizations at Doppler f_d. snr: (lo, hi) uniform draw or fixed float, dB.
 
     Returns (y_masked, h) complex64 (n, S, F) and snr_db (n,).
@@ -65,7 +85,7 @@ def gen_batch(n, f_d, snr, sys_cfg, ch_cfg, gen):
               delay_spread=ch_cfg["delay_spread_ns"] * 1e-9,
               carrier_frequency=fc, min_speed=v, max_speed=v)
     h = GenerateOFDMChannel(tdl, rg)(batch_size=n).reshape(n, S, F)  # complex64
-    x, mask = build_tx_grid(n, sys_cfg, gen)
+    x, mask = build_tx_grid(n, sys_cfg, gen, dmrs=dmrs)
     if isinstance(snr, (tuple, list)):
         snr_db = torch.rand(n, generator=gen) * (snr[1] - snr[0]) + snr[0]
     else:
@@ -84,6 +104,8 @@ def main():
     ap.add_argument("--n", type=int, required=True)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", type=str, default=str(ROOT / "data" / "dataset"))
+    ap.add_argument("--dmrs", action="store_true",
+                    help="Use 5G-NR Type-1 DMRS comb-2 pilot pattern (default: comb-4)")
     args = ap.parse_args()
 
     sys_cfg, ch_cfg = load_cfgs()
@@ -95,6 +117,10 @@ def main():
     torch.manual_seed(args.seed)
     gen = torch.Generator().manual_seed(args.seed)
 
+    pilot_desc = ("NR DMRS Type-1 comb-2 (§6.4.1.1.3-1, port 0)"
+                  if args.dmrs else "comb-4 (system.yaml)")
+    print(f"pilot pattern: {pilot_desc}")
+
     # round-robin split of n across doppler bins
     counts = [args.n // len(sweep)] * len(sweep)
     for i in range(args.n - sum(counts)):
@@ -105,7 +131,8 @@ def main():
         done = 0
         while done < cnt:
             b = min(CHUNK, cnt - done)
-            y_masked, h, snr_db = gen_batch(b, f_d, snr_range, sys_cfg, ch_cfg, gen)
+            y_masked, h, snr_db = gen_batch(b, f_d, snr_range, sys_cfg, ch_cfg, gen,
+                                            dmrs=args.dmrs)
             rx_list.append(y_masked)
             h_list.append(h)
             dop_list.append(torch.full((b,), float(f_d)))
