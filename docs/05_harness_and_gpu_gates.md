@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 5: Harness, EXIT checks & GPU gates"
+tags: [channel-est, harness, gpu, gates]
+timestamp: 2026-06-17
+---
+
 # Chapter 5: Harness, EXIT checks & GPU gates
 
 This repo is built *by agent prompts* with verifiable gates — the meta-layer

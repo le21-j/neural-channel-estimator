@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Tutorial: neural-channel-estimator"
+tags: [channel-est, index]
+timestamp: 2026-06-17
+---
+
 # Tutorial: neural-channel-estimator
 
 A neural OFDM **channel estimator**: a small CNN learns to reconstruct the full

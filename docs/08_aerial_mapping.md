@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 8: NVIDIA Aerial pyAerial mapping & slot-budget framing"
+tags: [channel-est, aerial, mapping]
+timestamp: 2026-06-17
+---
+
 # Chapter 8: NVIDIA Aerial pyAerial mapping & slot-budget framing
 
 This chapter explains how this repo's CNN channel estimator maps to

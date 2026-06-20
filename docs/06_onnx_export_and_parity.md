@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 6: ONNX export & parity"
+tags: [channel-est, onnx, export, parity]
+timestamp: 2026-06-17
+---
+
 # Chapter 6: ONNX export & parity
 
 Prompt 3 moves the [residual CNN](04_residual_cnn.md) out of PyTorch-land:

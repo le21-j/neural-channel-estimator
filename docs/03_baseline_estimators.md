@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 3: Baseline estimators: LS & LMMSE"
+tags: [channel-est, baseline, estimators]
+timestamp: 2026-06-17
+---
+
 # Chapter 3: Baseline estimators: LS & LMMSE
 
 `estimator/baselines.py` is the bar the CNN must clear. Both estimators come

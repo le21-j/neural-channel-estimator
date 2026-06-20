@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 7: TensorRT C++ engine & profiling (written, awaiting GPU)"
+tags: [channel-est, tensorrt, engine]
+timestamp: 2026-06-17
+---
+
 # Chapter 7: TensorRT C++ engine & profiling (written, awaiting GPU)
 
 Prompts 4–5 produce the deployment artifact: a standalone C++ binary that

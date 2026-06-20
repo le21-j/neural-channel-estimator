@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 2: Dataset generator"
+tags: [channel-est, dataset, generator]
+timestamp: 2026-06-17
+---
+
 # Chapter 2: Dataset generator
 
 `data/generate.py` turns the [config files](01_ofdm_numerology_and_configs.md)

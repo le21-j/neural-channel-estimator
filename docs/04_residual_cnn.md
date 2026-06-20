@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 4: Residual CNN"
+tags: [channel-est, residual, cnn]
+timestamp: 2026-06-17
+---
+
 # Chapter 4: Residual CNN
 
 `estimator/model.py` holds the learner: an 85k-parameter CNN that *refines*

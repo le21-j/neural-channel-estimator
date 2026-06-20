@@ -9,3 +9,16 @@ build/
 *.so
 *.o
 *.d
+
+# large / generated artifacts
+wandb/
+data/dataset/
+data/train/
+estimator/checkpoints/*.pt
+estimator/checkpoints/*.pth
+model.onnx
+
+# results (keep .gitkeep, exclude generated outputs)
+results/*.png
+results/*.json
+!results/.gitkeep

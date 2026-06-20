@@ -1,3 +1,10 @@
+---
+type: kernel-doc
+title: "Chapter 1: OFDM numerology & configs"
+tags: [channel-est, ofdm, numerology, configs]
+timestamp: 2026-06-17
+---
+
 # Chapter 1: OFDM numerology & configs
 
 Everything in this repo hangs off three small YAML files in `config/`. Think of
